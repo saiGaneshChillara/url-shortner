@@ -9,20 +9,28 @@ import { createUrlRoutes } from "./presentation/routes/urlRoutes";
 import { UpdateUrl } from "./application/usecases/UpdateUrl";
 import { DeleteUrl } from "./application/usecases/DeleteUrl";
 import { GetUrlDetails } from "./application/usecases/GetUrlDetails";
+import { IUrlRepository } from "./application/interfaces/IUrlRepository";
+import { PostgresUrlRepository } from "./infrastructure/postgres/PostgresUrlRepository";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI as string)
-  .then(() => console.log("Mongo connected"))
-  .catch(err => console.error(err));
 
 // dependency injection
 
 // infrastructure
-const urlRepository = new MongoUrlRepository();
+let urlRepository: IUrlRepository;
+
+if (process.env.DB_TYPE === "postgres") {
+  urlRepository = new PostgresUrlRepository();
+} else {
+  urlRepository = new MongoUrlRepository();
+  mongoose.connect(process.env.MONGO_URI as string)
+  .then(() => console.log("Mongo connected"))
+  .catch(err => console.error(err));
+}
 
 // use cases
 const createUrl = new CreateUrl(urlRepository);
